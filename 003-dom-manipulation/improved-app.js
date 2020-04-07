@@ -16,7 +16,10 @@ Change the game to follow these rules:
 3. Add another dice to the game, so that there are two dices now. The player looses his current score when one of them is a 1. (Hint: you will need CSS to position the second dice, so take a look at the CSS code for the first one.)
 */
 
-var playerScores, roundScore, activePlayer, isGamePlaying;
+var playerScores, roundScore, activePlayer, isGamePlaying, previousDice, endGameScore;
+var endGameScoreDom = document.querySelector("#end-game-score");
+
+
 
 //init the game
 init();
@@ -27,22 +30,35 @@ document.querySelector('.btn-roll')
         if (!isGamePlaying) {
             return;
         }
-        var dice = Math.floor(Math.random() * 6) + 1;
+        var diceFirst = Math.floor(Math.random() * 6) + 1;
+        var diceSecond = Math.floor(Math.random() * 6) + 1;
+
+        var diceSum = diceFirst + diceSecond;
 
         //Display dice image
-        var diceDom = document.querySelector(".dice");
+        var diceFirstDom = document.querySelector(".left-dice");
+        var diceSecondDom = document.querySelector(".right-dice");
 
-        diceDom.setAttribute("src", "dice-" + dice + ".png")
-        diceDom.style.display = "block"
+        diceFirstDom.setAttribute("src", "dice-" + diceFirst + ".png");
+        diceSecondDom.setAttribute("src", "dice-" + diceSecond + ".png");
 
-        // //Display dice result for active player
-        // document.querySelector("#current-" + activePlayer).textContent = dice;
+        diceFirstDom.style.display = "block";
+        diceSecondDom.style.display = "block";
+
+        if (diceSum === previousDice ) {
+            alert("Two times same dice sum");
+            playerScores [activePlayer] = 0;
+            switchPlayers();
+            return;
+        }
 
         //Update round score if dice result is not equal to 1
-        if (dice !== 1) {
-            roundScore += dice;
+        if (diceFirst !== 1 && diceSecond !== 1) {
+            roundScore += diceSum;
             document.querySelector("#current-" + activePlayer).textContent = roundScore;
+            previousDice = diceSum;
         } else {
+            alert("You roll 1. Round score is 0 now!");
             switchPlayers();
         }
     });
@@ -59,26 +75,40 @@ document.querySelector('.btn-hold')
         //Update UI
         document.querySelector("#score-" + activePlayer).textContent = playerScores[activePlayer];
 
+        console.log(playerScores[activePlayer]);
+        console.log(endGameScore);
         //Check if player wins
-        if (playerScores[activePlayer] >= 20) {
+        if (playerScores[activePlayer] >= endGameScore) {
             document.querySelector("#name-" + activePlayer).textContent = "Winner";
-            document.querySelector(".dice").style.display = "none";
+            document.querySelector(".left-dice").style.display = "none";
+            document.querySelector(".right-dice").style.display = "none";
             document.querySelector(".player-" + activePlayer + "-panel").classList.add("winner");
             document.querySelector(".player-" + activePlayer + "-panel").classList.remove("active");
 
             isGamePlaying = false;
+            endGameScoreDom.readOnly = false;
         } else {
             switchPlayers();
         }
     });
 
 document.querySelector('.btn-new')
-    .addEventListener("click", init);
+    .addEventListener("click", function () {
+        init();
+        endGameScore = endGameScoreDom.value;
 
+        endGameScoreDom.readOnly = true;
+        isGamePlaying = true;
+        console.log("end game score = " + endGameScore);
+    });
 
 function switchPlayers() {
     roundScore = 0;
     activePlayer === 0 ? activePlayer = 1 : activePlayer = 0;
+    previousDice = 0;
+
+    document.querySelector(".left-dice").style.display = "none";
+    document.querySelector(".right-dice").style.display = "none";
 
     document.querySelector("#current-0").textContent = roundScore;
     document.querySelector("#current-1").textContent = roundScore;
@@ -88,15 +118,14 @@ function switchPlayers() {
     document.querySelector(".player-1-panel").classList.toggle("active");
 }
 
-
 function init() {
     playerScores = [0, 0];
     roundScore = 0;
     activePlayer = 0;
-    isGamePlaying = true;
+    previousDice = 0;
 
-    //remove dice in the game beginning
-    document.querySelector(".dice").style.display = "none";
+    document.querySelector(".left-dice").style.display = "none";
+    document.querySelector(".right-dice").style.display = "none";
 
     document.getElementById("current-0").textContent = "0";
     document.getElementById("current-1").textContent = "0";
